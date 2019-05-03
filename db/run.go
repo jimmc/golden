@@ -13,7 +13,7 @@ import (
 // callback to produce a test output file, and compares it to the golden file.
 func FromSetupToGolden(basename string, callback func(*sql.DB, io.Writer) error) error {
   setupfilename := "testdata/" + basename + ".setup"
-  r := &base.GoldenRunner{
+  r := &base.Runner{
     BaseName: basename,
     CreateContext: func() (base.GoldenContext, error) {
       db, err := DbWithSetupFile(string(setupfilename))
