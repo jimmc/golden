@@ -3,7 +3,6 @@ package base
 import (
   "bufio"
   "fmt"
-  "io"
   "os"
   "path"
   "testing"
@@ -11,39 +10,39 @@ import (
 
 // Runner allows for configuring and running the different steps of the test.
 type Runner struct {
-  BaseName string       // Base name for all files in the test, if not overridden; defaults to "test".
-  BaseDir string        // Base directory; if not set, uses "testdata".
+  // Base name for all files in the test, if not overridden; defaults to "test".
+  BaseName string
+  // Base directory; if not set, uses "testdata".
+  BaseDir string
 
-  SetupBaseName string  // Base name for the setup file; if not set, uses BaseName.
-  SetupPath string      // Path to the setup file; if not set, uses SetupBaseName.
+  // Base name for the test output file; if not set, uses BaseName.
+  OutBaseName string
+  // Path to the test output file; if not set, uses OutBaseName.
+  OutPath string
 
-  OutBaseName string    // Base name for the test output file; if not set, uses BaseName.
-  OutPath string        // Path to the test output file; if not set, uses OutBaseName.
+  // Base name for the golden file; if not set, uses BaseName.
+  GoldenBaseName string
+  // Path to the golden file; if not set, uses GoldenBaseName.
+  GoldenPath string
 
-  GoldenBaseName string // Base name for the golden file; if not set, uses BaseName.
-  GoldenPath string     // Path to the golden file; if not set, uses GoldenBaseName.
+  // Function to run the test.
+  Test func(*Runner) error
 
-  CreateContext func() (GoldenContext, error)    // Function to create the context for testing.
-  Test func(GoldenContext, *os.File) error     // Function to run the test.
-}
-
-type GoldenContext interface {
-  io.Closer
-}
-
-func (r *Runner) SetupFilePath() string {
-  return r.getFilePath(r.SetupPath, r.SetupBaseName, "setup")
+  // The output file.
+  OutF *os.File;
+  // A Writer that can be used to write to the output file.
+  OutW *bufio.Writer;
 }
 
 func (r *Runner) OutFilePath() string {
-  return r.getFilePath(r.OutPath, r.OutBaseName, "out")
+  return r.GetFilePath(r.OutPath, r.OutBaseName, "out")
 }
 
 func (r *Runner) GoldenFilePath() string {
-  return r.getFilePath(r.GoldenPath, r.GoldenBaseName, "golden")
+  return r.GetFilePath(r.GoldenPath, r.GoldenBaseName, "golden")
 }
 
-func (r *Runner) getFilePath(fpath, basename, extension string) string {
+func (r *Runner) GetFilePath(fpath, basename, extension string) string {
   if fpath != "" {
     return fpath
   }
@@ -60,93 +59,71 @@ func (r *Runner) getFilePath(fpath, basename, extension string) string {
   return path.Join(basedir, basename + "." + extension)
 }
 
-type RunData struct {
-  OutW *bufio.Writer;
-  OutF *os.File;
-  Ctx GoldenContext
-}
-
-func (r *Runner) Setup() (*RunData, error) {
-  var ctx GoldenContext
-  if r.CreateContext != nil {
-    var err error
-    ctx, err = r.CreateContext()
-    if err != nil {
-      return nil, err
-    }
-  }
-
+func (r *Runner) Setup() error {
   outfilepath := r.OutFilePath()
   os.Remove(outfilepath)
   f, err := os.Create(outfilepath)
   if err != nil {
-    if ctx != nil {
-      ctx.Close()
-    }
-    return nil, fmt.Errorf("error creating output file %q: %v", outfilepath, err)
+    return fmt.Errorf("error creating output file %q: %v", outfilepath, err)
   }
   w := bufio.NewWriter(f)
 
-  return &RunData{
-    OutF: f,
-    OutW: w,
-    Ctx: ctx,
-  }, nil
+  r.OutF = f
+  r.OutW = w
+  return nil
 }
 
-func (r *Runner) Finish(data *RunData) error {
-  data.OutW.Flush()
-  data.OutF.Close()
-  if data.Ctx != nil {
-    data.Ctx.Close()
-  }
+func (r *Runner) Act() error {
+  return r.Test(r)
+}
+
+func (r *Runner) Finish() error {
+  r.OutW.Flush()
+  r.OutF.Close()
   return CompareOutToGolden(r.OutFilePath(), r.GoldenFilePath())
 }
 
-// Run runs a test using the configuration of the Runner.
-func (r *Runner) Run() error {
-  runData, err := r.Setup()
-  if err != nil {
-    return err
-  }
-  if runData.Ctx != nil {
-    defer runData.Ctx.Close()
-  }
-
-  // Run the specific test step.
-  err = r.Test(runData.Ctx, runData.OutF)
-  if err != nil {
-    return err
-  }
-
-  // Check the output to see if we got the right data.
-  return r.Finish(runData)
-}
-
 // SetupT is like Setup except that it calls t.Fatal on error.
-func (r *Runner) SetupT(t *testing.T) *RunData {
+func (r *Runner) SetupT(t *testing.T) {
   t.Helper()
-  d, err := r.Setup()
-  if err != nil {
+  if err := r.Setup(); err != nil {
     t.Fatalf("Error running Setup: %v", err)
   }
-  return d
 }
 
 // FinishT is like Finish except that it calls t.Fatal on error.
-func (r *Runner) FinishT(t *testing.T, data *RunData) {
+func (r *Runner) FinishT(t *testing.T) {
   t.Helper()
-  err := r.Finish(data)
-  if err != nil {
+  if err := r.Finish(); err != nil {
     t.Fatalf("Error running Finish: %v", err)
   }
 }
 
+type GenericRunner interface {
+  Setup() error
+  Act() error
+  Finish() error
+}
+
+// Run runs a test using the configuration of the Runner.
+func Run(r GenericRunner) error {
+  if err := r.Setup(); err != nil {
+    return err
+  }
+
+  // Perform the test action.
+  if err := r.Act(); err != nil {
+    return err
+  }
+
+  // Check the output to see if we got the right data.
+  return r.Finish()
+}
+
 // RunT is like Run except that it calls t.Fatal on error.
-func (r *Runner) RunT(t *testing.T) {
+func RunT(t *testing.T, r GenericRunner) {
   t.Helper()
-  err := r.Run()
-  if err != nil {
+  if err := Run(r); err != nil {
     t.Fatalf("Error running Run: %v", err)
   }
 }

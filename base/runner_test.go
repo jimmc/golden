@@ -11,34 +11,34 @@ func TestBasePath(t *testing.T) {
     BaseName: "xyz",
   }
   if got, want := gr.OutFilePath(), "testdata/xyz.out"; got != want {
-    t.Errorf("SetupFilePath with base name: got %q, want %q", got, want)
+    t.Errorf("OutFilePath with base name: got %q, want %q", got, want)
   }
 
   gr = &base.Runner{
     BaseDir: "bar",
   }
   if got, want := gr.OutFilePath(), "bar/test.out"; got != want {
-    t.Errorf("SetupFilePath with base dir: got %q, want %q", got, want)
+    t.Errorf("OutFilePath with base dir: got %q, want %q", got, want)
   }
 }
 
-func TestSetupFilePath(t *testing.T) {
+func TestOutFilePath(t *testing.T) {
   gr := &base.Runner{}
-  if got, want := gr.SetupFilePath(), "testdata/test.setup"; got != want {
-    t.Errorf("SetupFilePath on empty config: got %q, want %q", got, want)
+  if got, want := gr.OutFilePath(), "testdata/test.out"; got != want {
+    t.Errorf("OutFilePath on empty config: got %q, want %q", got, want)
   }
 
   gr = &base.Runner{
-    SetupBaseName: "abc",
+    OutBaseName: "abc",
   }
-  if got, want := gr.SetupFilePath(), "testdata/abc.setup"; got != want {
-    t.Errorf("SetupFilePath with name: got %q, want %q", got, want)
+  if got, want := gr.OutFilePath(), "testdata/abc.out"; got != want {
+    t.Errorf("OutFilePath with name: got %q, want %q", got, want)
   }
 
   gr = &base.Runner{
-    SetupPath: "foo/abc.set-up",
+    OutPath: "foo/abc.oot",
   }
-  if got, want := gr.SetupFilePath(), "foo/abc.set-up"; got != want {
-    t.Errorf("SetupFilePath with path: got %q, want %q", got, want)
+  if got, want := gr.OutFilePath(), "foo/abc.oot"; got != want {
+    t.Errorf("OutFilePath with path: got %q, want %q", got, want)
   }
 }
