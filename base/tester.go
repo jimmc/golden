@@ -34,6 +34,7 @@ type Tester struct {
   OutW *bufio.Writer;
 }
 
+// NewTester creates a new Tester instance.
 func NewTester(basename string) *Tester {
   r := &Tester{
     BaseName: basename,
@@ -41,14 +42,20 @@ func NewTester(basename string) *Tester {
   return r
 }
 
+// OutFilePath returns the complete path to the output file.
 func (r *Tester) OutFilePath() string {
   return r.GetFilePath(r.OutPath, r.OutBaseName, "out")
 }
 
+// GoldenFilePath returns the complete path to the golden file.
 func (r *Tester) GoldenFilePath() string {
   return r.GetFilePath(r.GoldenPath, r.GoldenBaseName, "golden")
 }
 
+// GetFilePath calculates and returns the complete path to a file.
+// If fpath is set, it returns it, else it uses basename, with default "test",
+// and the Tester's BaseDir, with default "testdata", plus the given extension
+// to generate the path to return.
 func (r *Tester) GetFilePath(fpath, basename, extension string) string {
   if fpath != "" {
     return fpath
@@ -66,6 +73,8 @@ func (r *Tester) GetFilePath(fpath, basename, extension string) string {
   return path.Join(basedir, basename + "." + extension)
 }
 
+// Setup creates the output files for the test to write to and sets
+// OutF and OutW in the Tester.
 func (r *Tester) Setup() error {
   outfilepath := r.OutFilePath()
   os.Remove(outfilepath)
@@ -80,10 +89,12 @@ func (r *Tester) Setup() error {
   return nil
 }
 
+// Act calls the users Test function.
 func (r *Tester) Act() error {
   return r.Test(r)
 }
 
+// Finish close the output and compares it to the golden file.
 func (r *Tester) Finish() error {
   r.OutW.Flush()
   r.OutF.Close()
