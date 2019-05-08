@@ -73,9 +73,14 @@ func (r *Tester) GetFilePath(fpath, basename, extension string) string {
   return path.Join(basedir, basename + "." + extension)
 }
 
-// Setup creates the output files for the test to write to and sets
+// Init is a no-op for this Tester.
+func (r *Tester) Init() error {
+  return nil
+}
+
+// Arrange creates the output files for the test to write to and sets
 // OutF and OutW in the Tester.
-func (r *Tester) Setup() error {
+func (r *Tester) Arrange() error {
   outfilepath := r.OutFilePath()
   os.Remove(outfilepath)
   f, err := os.Create(outfilepath)
@@ -94,25 +99,30 @@ func (r *Tester) Act() error {
   return r.Test(r)
 }
 
-// Finish close the output and compares it to the golden file.
-func (r *Tester) Finish() error {
+// Assert close the output and compares it to the golden file.
+func (r *Tester) Assert() error {
   r.OutW.Flush()
   r.OutF.Close()
   return CompareOutToGolden(r.OutFilePath(), r.GoldenFilePath())
 }
 
-// SetupT is like Setup except that it calls t.Fatal on error.
-func (r *Tester) SetupT(t *testing.T) {
+// Close is a no-op in this Tester.
+func (r *Tester) Close() error {
+  return nil
+}
+
+// ArrangeT is like Arrange except that it calls t.Fatal on error.
+func (r *Tester) ArrangeT(t *testing.T) {
   t.Helper()
-  if err := r.Setup(); err != nil {
-    t.Fatalf("Error running Setup: %v", err)
+  if err := r.Arrange(); err != nil {
+    t.Fatalf("Error running Arrange: %v", err)
   }
 }
 
-// FinishT is like Finish except that it calls t.Fatal on error.
-func (r *Tester) FinishT(t *testing.T) {
+// AssertT is like Assert except that it calls t.Fatal on error.
+func (r *Tester) AssertT(t *testing.T) {
   t.Helper()
-  if err := r.Finish(); err != nil {
-    t.Fatalf("Error running Finish: %v", err)
+  if err := r.Assert(); err != nil {
+    t.Fatalf("Error running Assert: %v", err)
   }
 }

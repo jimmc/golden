@@ -22,7 +22,11 @@ func LoadSetupFile(db *sql.DB, filename string) error {
   if err != nil {
     return err
   }
-  return ExecMulti(db, string(setupSql))
+  return LoadSetupString(db, string(setupSql))
+}
+
+func LoadSetupString(db *sql.DB, setupSql string) error {
+  return ExecMulti(db, setupSql)
 }
 
 func DbWithSetupFile(filename string) (*sql.DB, error) {
@@ -38,7 +42,7 @@ func DbWithSetupString(setupSql string) (*sql.DB, error) {
   if err != nil {
     return nil, err
   }
-  err = ExecMulti(db, setupSql)
+  err = LoadSetupString(db, setupSql)
   if err != nil {
     db.Close()
     return nil, err

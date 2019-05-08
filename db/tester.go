@@ -35,13 +35,9 @@ func (r *Tester) SetupFilePath() string {
   return r.GetFilePath(r.SetupPath, r.SetupBaseName, "setup")
 }
 
-// Setup does all of the setup from base.Tester, and sets up the db
-// and loads the setup file as calculated from the Tester.
-func (r *Tester) Setup() error {
-  if err := r.Tester.Setup(); err != nil {
-    return err
-  }
-  db, err := DbWithSetupFile(r.SetupFilePath())
+// Init initializes our database.
+func (r *Tester) Init() error {
+  db, err := EmptyDb()
   if err != nil {
     return err
   }
@@ -49,10 +45,21 @@ func (r *Tester) Setup() error {
   return nil
 }
 
-// Finish closes the database and the output file and checks the output.
-func (r *Tester) Finish() error {
+// Arrange prepares the output file and loads the setup file.
+func (r *Tester) Arrange() error {
+  if err := r.Tester.Arrange(); err != nil {
+    return err
+  }
+  if err := LoadSetupFile(r.db, r.SetupFilePath()); err != nil {
+    return err
+  }
+  return nil
+}
+
+// Finish closes the database
+func (r *Tester) Close() error {
   if r.db != nil {
     r.db.Close()
   }
-  return r.Tester.Finish()
+  return nil
 }
