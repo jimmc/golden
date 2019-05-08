@@ -16,7 +16,7 @@ type Tester struct {
   // Path to the test setup file; if not set, uses SetupBaseName.
   SetupPath string
 
-  db *sql.DB
+  DB *sql.DB
 }
 
 // NewTester creates a new instance of a Tester that will call the specified
@@ -25,7 +25,7 @@ func NewTester(basename string, callback func(*sql.DB, io.Writer) error) *Tester
   r := &Tester{}
   r.BaseName = basename
   r.Test = func(baseR *base.Tester) error {
-    return callback(r.db, r.OutW)
+    return callback(r.DB, r.OutW)
   }
   return r
 }
@@ -41,7 +41,7 @@ func (r *Tester) Init() error {
   if err != nil {
     return err
   }
-  r.db = db
+  r.DB = db
   return nil
 }
 
@@ -50,7 +50,7 @@ func (r *Tester) Arrange() error {
   if err := r.Tester.Arrange(); err != nil {
     return err
   }
-  if err := LoadSetupFile(r.db, r.SetupFilePath()); err != nil {
+  if err := LoadSetupFile(r.DB, r.SetupFilePath()); err != nil {
     return err
   }
   return nil
@@ -58,8 +58,8 @@ func (r *Tester) Arrange() error {
 
 // Finish closes the database
 func (r *Tester) Close() error {
-  if r.db != nil {
-    r.db.Close()
+  if r.DB != nil {
+    r.DB.Close()
   }
   return nil
 }
