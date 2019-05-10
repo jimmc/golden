@@ -13,10 +13,12 @@ var (
   DbName = ":memory:"
 )
 
+// EmptyDb creates an empty database from the values in our variables DbType and DbName.
 func EmptyDb() (*sql.DB, error) {
   return sql.Open(DbType, DbName)
 }
 
+// LoadSetupFile reads and executes SQL commands from the specified file.
 func LoadSetupFile(db *sql.DB, filename string) error {
   setupSql, err := ioutil.ReadFile(filename)
   if err != nil {
@@ -25,10 +27,12 @@ func LoadSetupFile(db *sql.DB, filename string) error {
   return LoadSetupString(db, string(setupSql))
 }
 
+// LoadSetupString reads and executes SQL commands from the given string.
 func LoadSetupString(db *sql.DB, setupSql string) error {
   return ExecMulti(db, setupSql)
 }
 
+// DbWithSetupFile creates a new database and executes SQL commands from the given file.
 func DbWithSetupFile(filename string) (*sql.DB, error) {
   setupSql, err := ioutil.ReadFile(filename)
   if err != nil {
@@ -37,6 +41,7 @@ func DbWithSetupFile(filename string) (*sql.DB, error) {
   return DbWithSetupString(string(setupSql))
 }
 
+// DbWithSetupFile creates a new database and executes SQL commands from the given string.
 func DbWithSetupString(setupSql string) (*sql.DB, error) {
   db, err := EmptyDb()
   if err != nil {

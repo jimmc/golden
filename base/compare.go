@@ -6,6 +6,8 @@ import (
   "io/ioutil"
 )
 
+// CompareOutToGolden reads the outfile and the goldenfile and compares them.
+// It returns an error if they are not the same.
 func CompareOutToGolden(outfilepath, goldenfilepath string) error {
   outcontent, err := ioutil.ReadFile(outfilepath)
   if err != nil {
