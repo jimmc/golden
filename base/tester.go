@@ -2,6 +2,7 @@ package base
 
 import (
   "bufio"
+  "errors"
   "fmt"
   "os"
   "path"
@@ -95,6 +96,9 @@ func (r *Tester) Arrange() error {
 
 // Act calls the users Test function.
 func (r *Tester) Act() error {
+  if r.Test == nil {
+    return errors.New("no Test method set")
+  }
   return r.Test(r)
 }
 
