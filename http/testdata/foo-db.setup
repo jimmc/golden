@@ -1,0 +1,2 @@
+CREATE TABLE test(s string, n int);
+INSERT INTO test(s, n) values('aa', 11), ('bb', 22);
