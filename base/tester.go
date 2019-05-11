@@ -5,7 +5,6 @@ import (
   "fmt"
   "os"
   "path"
-  "testing"
 )
 
 // Tester allows for configuring and running the different steps of the test.
@@ -109,20 +108,4 @@ func (r *Tester) Assert() error {
 // Close is a no-op in this Tester.
 func (r *Tester) Close() error {
   return nil
-}
-
-// ArrangeT is like Arrange except that it calls t.Fatal on error.
-func (r *Tester) ArrangeT(t *testing.T) {
-  t.Helper()
-  if err := r.Arrange(); err != nil {
-    t.Fatalf("Error running Arrange: %v", err)
-  }
-}
-
-// AssertT is like Assert except that it calls t.Fatal on error.
-func (r *Tester) AssertT(t *testing.T) {
-  t.Helper()
-  if err := r.Assert(); err != nil {
-    t.Fatalf("Error running Assert: %v", err)
-  }
 }

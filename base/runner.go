@@ -48,10 +48,12 @@ func Run(r Runner) error {
   return r.Close()
 }
 
-// RunT is like Run except that it calls t.Fatal on error.
-func RunT(t *testing.T, r Runner) {
+// FatalIfError calls testing.T.Fatal if there is an error.
+// This is typically used to wrap calls to the various Runner steps, for example:
+//   base.FatalIfError(t, r.Arrange(), "Arrange")
+func FatalIfError(t *testing.T, err error, label string) {
   t.Helper()
-  if err := Run(r); err != nil {
-    t.Fatalf("Error running Run: %v", err)
+  if err != nil {
+    t.Fatalf("Error in %s: %v", label, err)
   }
 }

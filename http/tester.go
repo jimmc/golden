@@ -7,7 +7,6 @@ import (
   "net/http"
   "net/http/httptest"
   "os"
-  "testing"
 
   goldendb "github.com/jimmc/golden/db"
 )
@@ -77,34 +76,31 @@ func (r *Tester) Act() error {
 // This function can be used in a test where there are multiple files to be loaded.
 // A typical calling sequence for that scenario is to call Init,
 // then RunTest multiple times, and finally Close when done with all tests.
-func (r *Tester) RunTest(t *testing.T) {
-  t.Helper()
+func (r *Tester) RunTest() error {
   if err := r.Arrange(); err != nil {
-    t.Fatalf("Error loading setup file: %v", err)
+    return fmt.Errorf("error loading setup file: %v", err)
   }
   if err := r.Act(); err != nil {
-    t.Fatalf("Error running test: %v", err)
+    return fmt.Errorf("error running test: %v", err)
   }
-  if err := r.Assert(); err != nil {
-    t.Fatal(err)
-  }
+  return r.Assert()
 }
 
 // RunTestWith runs a test using the specified basename and callback.
 // This can be used multiple times within a Tester. The database state is maintained across tests,
 // allowing a sequence of calls that builds up and modifies a database.
-func (r *Tester) RunTestWith(t *testing.T, basename string, callback func() (*http.Request, error)) {
-  t.Helper()
+func (r *Tester) RunTestWith(basename string, callback func() (*http.Request, error)) error {
   r.SetBaseNameAndCallback(basename, callback)
-  r.RunTest(t)
+  return r.RunTest()
 }
 
 // Run initializes the tester, runs a test, and closes it, calling Fatalf on any error.
-func (r *Tester) Run(t *testing.T, basename string, callback func() (*http.Request, error)) {
-  t.Helper()
+func (r *Tester) Run(basename string, callback func() (*http.Request, error)) error {
   if err := r.Init(); err != nil {
-    t.Fatal(err)
+    return err
   }
-  r.RunTestWith(t, basename, callback)
-  r.Close()
+  if err := r.RunTestWith(basename, callback); err != nil {
+    return err
+  }
+  return r.Close()
 }
