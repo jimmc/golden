@@ -1,4 +1,4 @@
-package http_test
+package httpdb_test
 
 import (
   "database/sql"
@@ -6,7 +6,7 @@ import (
   "net/http"
   "testing"
 
-  goldenhttp "github.com/jimmc/golden/http"
+  goldenhttpdb "github.com/jimmc/golden/httpdb"
 )
 
 type dbhandler struct {
@@ -59,7 +59,7 @@ func TestHttpDbTester(t *testing.T) {
   request := func() (*http.Request, error) {
     return http.NewRequest("GET", "/api/foo/", nil)
   }
-  r := goldenhttp.NewTester(func (r *goldenhttp.Tester) http.Handler {
+  r := goldenhttpdb.NewTester(func (r *goldenhttpdb.Tester) http.Handler {
     h := &dbhandler{}
     h.db = r.DB
     return h

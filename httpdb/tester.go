@@ -1,4 +1,4 @@
-package http
+package httpdb
 
 import (
   "errors"
@@ -8,7 +8,7 @@ import (
   "net/http/httptest"
   "os"
 
-  goldenbase "github.com/jimmc/golden/base"
+  goldendb "github.com/jimmc/golden/db"
 )
 
 // Tester provides the structure for running API unit tests.
@@ -22,7 +22,7 @@ import (
 //   r.RunTestWith(t, basename2, callback2)
 //   r.Close()
 type Tester struct {
-  goldenbase.Tester
+  goldendb.Tester
 
   CreateHandler func(r *Tester) http.Handler
   Callback func() (*http.Request, error)
@@ -87,8 +87,8 @@ func (r *Tester) RunTest() error {
 }
 
 // RunTestWith runs a test using the specified basename and callback.
-// This can be used multiple times within a Tester. The tester state is maintained across tests,
-// allowing a sequence of calls that builds up and modifies tester state.
+// This can be used multiple times within a Tester. The database state is maintained across tests,
+// allowing a sequence of calls that builds up and modifies a database.
 func (r *Tester) RunTestWith(basename string, callback func() (*http.Request, error)) error {
   r.SetBaseNameAndCallback(basename, callback)
   return r.RunTest()
