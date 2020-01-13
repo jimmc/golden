@@ -102,7 +102,7 @@ func (r *Tester) Act() error {
   return r.Test(r)
 }
 
-// Assert close the output and compares it to the golden file.
+// Assert closes the output and compares it to the golden file.
 func (r *Tester) Assert() error {
   r.OutW.Flush()
   r.OutF.Close()
