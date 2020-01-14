@@ -1,6 +1,7 @@
 package base
 
 import (
+  "fmt"
   "testing"
 )
 
@@ -17,7 +18,7 @@ type Runner interface {
 }
 
 // MultiRunner defines the methods used when running multiple tests that
-// include common setup and close steps.
+// include common init and close steps.
 // Typical use for a MultiRunner is to call m.Init(), then do some test-specific
 // setup work and call RunTest, repeat that for all tests, and finish by calling m.Close().
 type MultiRunner interface {
@@ -30,31 +31,32 @@ type MultiRunner interface {
   Close() error
 }
 
-// RunTest runs one test on the Runner.
+// RunTest runs the test on the Runner by executing the Arrange, Act, and Assert functions.
 func RunTest(r Runner) error {
   // Set things up for our one test.
   if err := r.Arrange(); err != nil {
-    return err
+    return fmt.Errorf("error in test Arrange: %v", err)
   }
 
   // Perform the test action.
   if err := r.Act(); err != nil {
-    return err
+    return fmt.Errorf("error in test Act: %v", err)
   }
 
   // Check the output against the golden file.
-  return r.Assert()
+  if err := r.Assert(); err != nil {
+    return fmt.Errorf("error in test Assert: %v", err)
+  }
+
+  return nil
 }
 
-// Run runs one test on the Runner.
-// If the Runner is also a MultiRunner, this also runs the Init and Close functions.
-// If not, this is the same as calling RunTest.
-func Run(r Runner) error {
-  if m, ok := r.(MultiRunner); ok {
-    // Do the one-time initialization.
-    if err := m.Init(); err != nil {
-      return err
-    }
+// RunOne runs one test on the MultiRunner by executing
+// Init, then running RunTest, then Close.
+func RunOne(r MultiRunner) error {
+  // Do the one-time initialization.
+  if err := r.Init(); err != nil {
+    return fmt.Errorf("error in test Init: %v", err)
   }
 
   // Run one test.
@@ -62,11 +64,9 @@ func Run(r Runner) error {
     return err
   }
 
-  if m, ok := r.(MultiRunner); ok {
-    // Clean up.
-    if err := m.Close(); err != nil {
-      return err
-    }
+  // Clean up.
+  if err := r.Close(); err != nil {
+    return fmt.Errorf("error in test Close: %v", err)
   }
 
   return nil

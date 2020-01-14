@@ -23,7 +23,7 @@ func TestHttpTester(t *testing.T) {
     return http.NewRequest("GET", "/api/foo/", nil)
   }
   r := goldenhttp.NewTester(createTestHandler)
-  if err := r.Run("foo", request); err != nil {
+  if err := goldenhttp.RunOneWith(r, "foo", request); err != nil {
     t.Fatalf("Error in Run: %s", err)
   }
 }

@@ -8,6 +8,7 @@ import (
   "net/http/httptest"
   "os"
 
+  goldenbase "github.com/jimmc/golden/base"
   goldendb "github.com/jimmc/golden/db"
 )
 
@@ -26,6 +27,11 @@ type Tester struct {
 
   CreateHandler func(r *Tester) http.Handler
   Callback func() (*http.Request, error)
+}
+
+type TesterApi interface {
+  goldenbase.MultiRunner
+  SetBaseNameAndCallback(basename string, callback func() (*http.Request, error))
 }
 
 // NewTester creates a new instance of a Tester that will use the specified
@@ -72,34 +78,20 @@ func (r *Tester) Act() error {
   return nil
 }
 
-// RunTest loads a new setup file, runs the test, and compares the output.
-// This function can be used in a test where there are multiple files to be loaded.
-// A typical calling sequence for that scenario is to call Init,
-// then RunTest multiple times, and finally Close when done with all tests.
-func (r *Tester) RunTest() error {
-  if err := r.Arrange(); err != nil {
-    return fmt.Errorf("error loading setup file: %v", err)
-  }
-  if err := r.Act(); err != nil {
-    return fmt.Errorf("error running test: %v", err)
-  }
-  return r.Assert()
-}
-
 // RunTestWith runs a test using the specified basename and callback.
 // This can be used multiple times within a Tester. The database state is maintained across tests,
 // allowing a sequence of calls that builds up and modifies a database.
-func (r *Tester) RunTestWith(basename string, callback func() (*http.Request, error)) error {
+func RunTestWith(r TesterApi, basename string, callback func() (*http.Request, error)) error {
   r.SetBaseNameAndCallback(basename, callback)
-  return r.RunTest()
+  return goldenbase.RunTest(r)
 }
 
 // Run initializes the tester, runs a test, and closes it, calling Fatalf on any error.
-func (r *Tester) Run(basename string, callback func() (*http.Request, error)) error {
+func RunOneWith(r TesterApi, basename string, callback func() (*http.Request, error)) error {
   if err := r.Init(); err != nil {
     return err
   }
-  if err := r.RunTestWith(basename, callback); err != nil {
+  if err := RunTestWith(r, basename, callback); err != nil {
     return err
   }
   return r.Close()

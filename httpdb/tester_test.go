@@ -64,7 +64,7 @@ func TestHttpDbTester(t *testing.T) {
     h.db = r.DB
     return h
   })
-  if err := r.Run("foo-db", request); err != nil {
+  if err := goldenhttpdb.RunOneWith(r, "foo-db", request); err != nil {
     t.Fatalf("Error in Run: %s", err)
   }
 }
