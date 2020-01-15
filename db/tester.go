@@ -56,7 +56,7 @@ func (r *Tester) Arrange() error {
   return nil
 }
 
-// Finish closes the database
+// Close closes the database
 func (r *Tester) Close() error {
   if r.DB != nil {
     r.DB.Close()

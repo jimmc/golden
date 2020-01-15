@@ -14,13 +14,14 @@ import (
 // Tester provides the structure for running API unit tests.
 // For a single test, the typical calling sequence is:
 //   r := NewTester(handlerCreateFunc)
-//   r.Run(t, basename, callback)
+//   if err := r.Run(t, basename, callback); err != nil { t.Fatal(err) }
 // For multiple tests, maintaining the Tester state across tests as it changes:
 //   r := NewTester(handlerCreateFunc)
-//   r.Init()
-//   r.RunTestWith(t, basename, callback)
-//   r.RunTestWith(t, basename2, callback2)
-//   r.Close()
+//   if err := r.Init(); err != nil { t.Fatal(err) }
+//   if err := r.RunTestWith(t, basename, callback); err != nil { t.Fatal(err) }
+//   if err := r.RunTestWith(t, basename2, callback2); err != nil { t.Fatal(err) }
+//   if err := r.Close(); err != nil { t.Fatal(err) }
+// (Error handling should be better than the minimal error handling shown above.)
 type Tester struct {
   goldenbase.Tester
 
